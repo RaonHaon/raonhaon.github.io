@@ -116,13 +116,13 @@ function init() {
         // Draw player (rocket)
         ctx.font = '70px Arial';
         ctx.fillStyle = 'blue';
-        ctx.fillText('??', player.x, player.y + 70);
+        ctx.fillText('🚀', player.x, player.y + 70);
 
         // Draw enemies (bugs)
         ctx.font = '40px Arial';
         enemies.forEach(enemy => {
             ctx.fillStyle = 'red';
-            ctx.fillText('??', enemy.x, enemy.y + 40);
+            ctx.fillText('🐛', enemy.x, enemy.y + 40);
         });
 
         // Draw bullets
