@@ -1,3 +1,4 @@
+
 // game.js
 
 // Initialize the game
@@ -11,27 +12,26 @@ function init() {
     let bullets = [];
     let score = 0;
     let lives = 3;
+    let gameTime = 0;
+    let spawnInterval = 2000; // Initial spawn interval in milliseconds
+    let lastSpawnTime = 0;
 
-    // Create enemies
+    // Create initial enemies
     for (let i = 0; i < 8; i++) {
-        enemies.push({
-            x: Math.random() * (canvas.width - 30),
-            y: Math.random() * -200,
-            width: 40,
-            height: 40,
-            speed: Math.random() * 2 + 1
-        });
+        enemies.push(createEnemy());
     }
 
     // Game loop
-    function gameLoop() {
-        update();
+    function gameLoop(timestamp) {
+        update(timestamp);
         draw();
         requestAnimationFrame(gameLoop);
     }
 
     // Update game state
-    function update() {
+    function update(timestamp) {
+        gameTime = timestamp;
+
         // Move player
         if (keys['ArrowLeft'] && player.x > 0) player.x -= 5;
         if (keys['ArrowRight'] && player.x < canvas.width - player.width) player.x += 5;
@@ -42,7 +42,7 @@ function init() {
             if (enemy.y > canvas.height) {
                 enemy.y = Math.random() * -200;
                 enemy.x = Math.random() * (canvas.width - enemy.width);
-                enemy.speed = Math.random() * 2 + 1;
+                enemy.speed = getEnemySpeed();
             }
         });
 
@@ -64,7 +64,7 @@ function init() {
                     score += 10;
                     enemy.y = Math.random() * -200;
                     enemy.x = Math.random() * (canvas.width - enemy.width);
-                    enemy.speed = Math.random() * 2 + 1;
+                    enemy.speed = getEnemySpeed();
                     bullets.splice(bullets.indexOf(bullet), 1);
                 }
             });
@@ -80,9 +80,33 @@ function init() {
                 }
                 enemy.y = Math.random() * -200;
                 enemy.x = Math.random() * (canvas.width - enemy.width);
-                enemy.speed = Math.random() * 2 + 1;
+                enemy.speed = getEnemySpeed();
             }
         });
+
+        // Spawn new enemies over time
+        if (gameTime - lastSpawnTime > spawnInterval) {
+            enemies.push(createEnemy());
+            lastSpawnTime = gameTime;
+            // Decrease spawn interval over time
+            spawnInterval = Math.max(500, spawnInterval * 0.98);
+        }
+    }
+
+    // Create a new enemy
+    function createEnemy() {
+        return {
+            x: Math.random() * (canvas.width - 30),
+            y: Math.random() * -200,
+            width: 40,
+            height: 40,
+            speed: getEnemySpeed()
+        };
+    }
+
+    // Calculate enemy speed based on game time
+    function getEnemySpeed() {
+        return Math.min(5, 1 + gameTime / 10000); // Increase speed over time, max speed of 5
     }
 
     // Draw game objects
@@ -90,26 +114,15 @@ function init() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Draw player (rocket)
+        ctx.font = '70px Arial';
         ctx.fillStyle = 'blue';
-        ctx.fillRect(player.x, player.y, player.width, player.height);
-        ctx.fillStyle = 'white';
-        ctx.beginPath();
-        ctx.moveTo(player.x + player.width / 2, player.y);
-        ctx.lineTo(player.x, player.y + player.height);
-        ctx.lineTo(player.x + player.width, player.y + player.height);
-        ctx.fill();
+        ctx.fillText('??', player.x, player.y + 70);
 
-        // Draw enemies (spiders)
-        ctx.fillStyle = 'red';
+        // Draw enemies (bugs)
+        ctx.font = '40px Arial';
         enemies.forEach(enemy => {
-            ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
-            ctx.fillStyle = 'black';
-            ctx.beginPath();
-            ctx.arc(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 10, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = 'black';
-            ctx.fillRect(enemy.x + 10, enemy.y + enemy.height / 2, 20, 2);
-            ctx.fillRect(enemy.x + enemy.width / 2, enemy.y + 10, 2, 20);
+            ctx.fillStyle = 'red';
+            ctx.fillText('??', enemy.x, enemy.y + 40);
         });
 
         // Draw bullets
@@ -130,14 +143,14 @@ function init() {
     document.addEventListener('keydown', e => {
         keys[e.code] = true;
         if (e.code === 'Space') {
-            bullets.push({ x: player.x + player.width / 2 - 2.5, y: player.y });
+            bullets.push({ x: player.x + 25 - 2.5, y: player.y });
         }
     });
     document.addEventListener('keyup', e => {
         keys[e.code] = false;
     });
 
-    gameLoop();
+    gameLoop(0);
 }
 
 // Start the game when the window loads
